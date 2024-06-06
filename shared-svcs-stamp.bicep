@@ -215,48 +215,48 @@ resource acrAzureDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-p
   }
 }
 
-@description('Saved query to detect failed pods.')
-resource PodFailedScheduledQuery 'Microsoft.Insights/scheduledQueryRules@2023-03-15-preview' = {
-  name: 'PodFailedScheduledQuery'
-  location: location
-  tags: {}
-  properties: {
-    description: 'Example from: https://learn.microsoft.com/azure/azure-monitor/containers/container-insights-log-alerts'
-    severity: 3
-    enabled: true
-    evaluationFrequency: 'PT5M'
-    scopes: [
-      subscription().id
-    ]
-    windowSize: 'PT5M'
-    overrideQueryTimeRange: 'P2D'
-    criteria: {
-      allOf: [
-        {
-          query: 'let trendBinSize = 1m;\r\nKubePodInventory\r\n| distinct ClusterName, TimeGenerated, _ResourceId\r\n| summarize ClusterSnapshotCount = count() by bin(TimeGenerated, trendBinSize), ClusterName, _ResourceId\r\n| join hint.strategy=broadcast (\r\nKubePodInventory\r\n| distinct ClusterName, Computer, PodUid, TimeGenerated, PodStatus\r\n| summarize TotalCount = count(),\r\nPendingCount = sumif(1, PodStatus =~ "Pending"),\r\nRunningCount = sumif(1, PodStatus =~ "Running"),\r\nSucceededCount = sumif(1, PodStatus =~ "Succeeded"),\r\nFailedCount = sumif(1, PodStatus =~ "Failed")\r\nby ClusterName, bin(TimeGenerated, trendBinSize)\r\n)\r\non ClusterName, TimeGenerated\r\n| extend UnknownCount = TotalCount - PendingCount - RunningCount - SucceededCount - FailedCount\r\n| project TimeGenerated,\r\nClusterName,\r\n_ResourceId,\r\nTotalCount = todouble(TotalCount) / ClusterSnapshotCount,\r\nPendingCount = todouble(PendingCount) / ClusterSnapshotCount,\r\nRunningCount = todouble(RunningCount) / ClusterSnapshotCount,\r\nSucceededCount = todouble(SucceededCount) / ClusterSnapshotCount,\r\nFailedCount = todouble(FailedCount) / ClusterSnapshotCount,\r\nUnknownCount = todouble(UnknownCount) / ClusterSnapshotCount'
-          timeAggregation: 'Average'
-          metricMeasureColumn: 'FailedCount'
-          dimensions: [
-            {
-              name: 'ClusterName'
-              operator: 'Include'
-              values: [
-                '*'
-              ]
-            }
-          ]
-          resourceIdColumn: '_ResourceId'
-          operator: 'GreaterThan'
-          threshold: 3
-          failingPeriods: {
-            numberOfEvaluationPeriods: 1
-            minFailingPeriodsToAlert: 1
-          }
-        }
-      ]
-    }
-  }
-}
+// @description('Saved query to detect failed pods.')
+// resource PodFailedScheduledQuery 'Microsoft.Insights/scheduledQueryRules@2023-03-15-preview' = {
+//   name: 'PodFailedScheduledQuery'
+//   location: location
+//   tags: {}
+//   properties: {
+//     description: 'Example from: https://learn.microsoft.com/azure/azure-monitor/containers/container-insights-log-alerts'
+//     severity: 3
+//     enabled: true
+//     evaluationFrequency: 'PT5M'
+//     scopes: [
+//       subscription().id
+//     ]
+//     windowSize: 'PT5M'
+//     overrideQueryTimeRange: 'P2D'
+//     criteria: {
+//       allOf: [
+//         {
+//           query: 'let trendBinSize = 1m;\r\nKubePodInventory\r\n| distinct ClusterName, TimeGenerated, _ResourceId\r\n| summarize ClusterSnapshotCount = count() by bin(TimeGenerated, trendBinSize), ClusterName, _ResourceId\r\n| join hint.strategy=broadcast (\r\nKubePodInventory\r\n| distinct ClusterName, Computer, PodUid, TimeGenerated, PodStatus\r\n| summarize TotalCount = count(),\r\nPendingCount = sumif(1, PodStatus =~ "Pending"),\r\nRunningCount = sumif(1, PodStatus =~ "Running"),\r\nSucceededCount = sumif(1, PodStatus =~ "Succeeded"),\r\nFailedCount = sumif(1, PodStatus =~ "Failed")\r\nby ClusterName, bin(TimeGenerated, trendBinSize)\r\n)\r\non ClusterName, TimeGenerated\r\n| extend UnknownCount = TotalCount - PendingCount - RunningCount - SucceededCount - FailedCount\r\n| project TimeGenerated,\r\nClusterName,\r\n_ResourceId,\r\nTotalCount = todouble(TotalCount) / ClusterSnapshotCount,\r\nPendingCount = todouble(PendingCount) / ClusterSnapshotCount,\r\nRunningCount = todouble(RunningCount) / ClusterSnapshotCount,\r\nSucceededCount = todouble(SucceededCount) / ClusterSnapshotCount,\r\nFailedCount = todouble(FailedCount) / ClusterSnapshotCount,\r\nUnknownCount = todouble(UnknownCount) / ClusterSnapshotCount'
+//           timeAggregation: 'Average'
+//           metricMeasureColumn: 'FailedCount'
+//           dimensions: [
+//             {
+//               name: 'ClusterName'
+//               operator: 'Include'
+//               values: [
+//                 '*'
+//               ]
+//             }
+//           ]
+//           resourceIdColumn: '_ResourceId'
+//           operator: 'GreaterThan'
+//           threshold: 3
+//           failingPeriods: {
+//             numberOfEvaluationPeriods: 1
+//             minFailingPeriodsToAlert: 1
+//           }
+//         }
+//       ]
+//     }
+//   }
+// }
 
 @description('Saved alert for any Azure Advisor notices.')
 resource AllAzureAdvisorAlert 'Microsoft.Insights/activityLogAlerts@2020-10-01' = {
